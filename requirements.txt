@@ -1,0 +1,9 @@
+# Python packages of the PACE-ADS nodes and tools. Install them for the Python 3.10 interpreter
+# used by ROS 2 Humble:  python3 -m pip install -r requirements.txt
+carla==0.9.15
+openai>=1.66            # OpenAI Responses API
+numpy==1.24.4
+shapely==2.0.6
+networkx==3.2.1
+opencv-python==4.10.0.84
+transforms3d==0.4.2     # dependency of carla-ros-bridge
