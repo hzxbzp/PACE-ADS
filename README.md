@@ -1,12 +1,45 @@
-# PACE-ADS replication package: personalization tests
+<div align="center">
 
-This package contains the code and simulation files.
+# PACE-ADS
 
-PACE-ADS (Psychology and Cognition Enabled Automated Driving Systems) adapts the driving behavior
-of an automated vehicle to its occupant with three foundation-model agents: a driver agent
-(scene understanding), a psychologist agent (occupant state from psychological signals and
-verbal commands) and a coordinator (behavior and parameter decisions). The package runs the four
-closed-loop tests in the CARLA simulator:
+### Your ride, your rules: Psychology and cognition enabled automated driving systems
+
+**Zhipeng Bao, Qianwen Li**<br>
+University of Georgia
+
+*Journal of Intelligent and Connected Vehicles (JICV), 2026*
+
+[![Paper](https://img.shields.io/badge/Paper-JICV%202026-1f6feb)](https://doi.org/10.26599/JICV.2026.9210099)
+[![arXiv](https://img.shields.io/badge/arXiv-2506.11842-b31b1b)](https://arxiv.org/abs/2506.11842)
+![ROS 2 Humble](https://img.shields.io/badge/ROS%202-Humble-22314E)
+![CARLA 0.9.15](https://img.shields.io/badge/CARLA-0.9.15-orange)
+![GPT-4o](https://img.shields.io/badge/Agents-GPT--4o-412991)
+[![License](https://img.shields.io/badge/License-Apache%202.0-green)](LICENSE)
+
+<img src="assets/framework.png" alt="PACE-ADS framework" width="100%">
+
+</div>
+
+## Overview
+
+PACE-ADS (Psychology and Cognition Enabled Automated Driving Systems) lets an automated vehicle respond to
+both the traffic around it and the state of its occupant. Three foundation-model agents work together:
+
+* **Driver agent**: interprets the traffic scene from the front camera and the perception measurements.
+* **Psychologist agent**: infers the occupant state from passive psychological signals (EEG, heart rate,
+  facial expression) and interprets verbal commands.
+* **Coordinator**: combines both reports, selects a driving behavior and its parameters within a safety
+  envelope, and explains the decision.
+
+PACE-ADS works at the behavioral planning layer. Real-time planning and control stay with the host AV
+stack (here, the CARLA behavior agent), which executes the selected behavior with the selected parameters.
+
+## What this repository contains
+
+This repository contains the code used to run the closed-loop CARLA simulations of the
+**personalization tests** in Section 3.3 of the paper: a ROS 2 implementation of the three agents,
+the scenario configurations, the behavior library, the run scripts, and a script that prepares the
+occupant-signal samples from the Emognition dataset.
 
 | Test in the paper | `scenario` value |
 |---|---|
@@ -15,10 +48,51 @@ closed-loop tests in the CARLA simulator:
 | Work zone navigation (Section 3.3.3) | `work_zone` |
 | Car following (Section 3.3.4) | `car_following` |
 
+<p align="center">
+  <img src="assets/pedestrian_interaction.png" alt="Pedestrian interaction under five occupant states" width="100%">
+  <br>
+  <em>Pedestrian interaction (Section 3.3.2): the stopping distance to the pedestrian and the lateral clearance at restart grow from very impatient (left) to very anxious (right).</em>
+</p>
+
+## Quick start
+
+```bash
+git clone https://github.com/hzxbzp/PACE-ADS.git
+cd PACE-ADS
+/usr/bin/python3 -m pip install -r requirements.txt
+# install ROS 2 Humble, CARLA 0.9.15 and carla-ros-bridge first (Section 3)
+cd pace_ads_ws
+source /opt/ros/humble/setup.bash && source ~/carla-ros-bridge/install/setup.bash
+colcon build && cd ..
+
+# start the CARLA 0.9.15 server, then:
+export OPENAI_API_KEY="<your key>"
+export ROS_BRIDGE_WS=~/carla-ros-bridge
+./run_scenario.sh traffic_light ~/occupant_samples   # traffic_light | pedestrian | work_zone | car_following
+```
+
+See the detailed guide below for installation (Section 3), occupant data (Section 4) and running a test (Section 5).
+
+## Citation
+
+```bibtex
+@article{bao2026paceads,
+  title   = {Your ride, your rules: Psychology and cognition enabled automated driving systems},
+  author  = {Bao, Zhipeng and Li, Qianwen},
+  journal = {Journal of Intelligent and Connected Vehicles},
+  year    = {2026},
+  doi     = {10.26599/JICV.2026.9210099}
+}
+```
+
+---
+
+# Detailed guide
+
 ## Contents
 
 ```
-PACE-ADS_Replication_Package/
+PACE-ADS/
 ├── README.md                          this file
 ├── requirements.txt                   Python packages
 ├── run_scenario.sh                    starts all nodes of one test (one xterm window per node)
@@ -128,7 +202,7 @@ sudo apt install python3-colcon-common-extensions python3-rosdep python3-pip ros
 ### 3.3 Python packages
 
 ```bash
-cd PACE-ADS_Replication_Package
+cd PACE-ADS
 /usr/bin/python3 -m pip install -r requirements.txt
 ```
 
@@ -152,7 +226,7 @@ colcon build
 ### 3.5 This package
 
 ```bash
-cd PACE-ADS_Replication_Package/pace_ads_ws
+cd PACE-ADS/pace_ads_ws
 source /opt/ros/humble/setup.bash
 source ~/carla-ros-bridge/install/setup.bash
 colcon build
@@ -228,7 +302,7 @@ cd ~/CARLA_0.9.15 && ./CarlaUE4.sh           # add -RenderOffScreen on a compute
 ### 5.2 Start all nodes with one command
 
 ```bash
-cd PACE-ADS_Replication_Package
+cd PACE-ADS
 export OPENAI_API_KEY="<your key>"
 export ROS_BRIDGE_WS=~/carla-ros-bridge       # workspace of carla-ros-bridge
 ./run_scenario.sh traffic_light ~/occupant_samples
@@ -247,7 +321,7 @@ In every terminal:
 ```bash
 source /opt/ros/humble/setup.bash
 source ~/carla-ros-bridge/install/setup.bash
-source PACE-ADS_Replication_Package/pace_ads_ws/install/setup.bash
+source PACE-ADS/pace_ads_ws/install/setup.bash
 S=traffic_light                       # traffic_light | pedestrian | work_zone | car_following
 OUT=~/pace_ads_output/run_1
 ```
@@ -367,6 +441,9 @@ ros2 topic pub --once /algorithm_params_topic std_msgs/msg/Float32MultiArray "da
   agent's reasoning and the source of the injected sample to `psychologist_log.jsonl`.
 
 ## 9. License
+
+See [LICENSE](LICENSE).
+
 
 The PACE-ADS code is released under the Apache License 2.0, as declared in `setup.py` and
 `package.xml`. The modules in `carla_navigation/` and `car_following/lat_controller.py` are derived
